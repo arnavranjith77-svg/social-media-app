@@ -1,0 +1,176 @@
+import { useState, useEffect } from 'react';
+import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment } from 'firebase/firestore';
+import { db } from '../firebase';
+
+export default function Feed({ user }) {
+  const [posts, setPosts] = useState([]);
+  const [newPost, setNewPost] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  // Fetch posts from Firestore
+  useEffect(() => {
+    const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const postsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPosts(postsData);
+      setLoading(false);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Add new post to Firestore
+  const handlePostCreate = async () => {
+    if (newPost.trim() && user) {
+      try {
+        await addDoc(collection(db, 'posts'), {
+          author: user.displayName || 'Anonymous',
+          authorId: user.uid,
+          content: newPost,
+          timestamp: new Date(),
+          likes: 0
+        });
+        setNewPost('');
+      } catch (error) {
+        console.error('Error adding post:', error);
+        alert('Error creating post');
+      }
+    }
+  };
+
+  // Like a post
+  const handleLike = async (postId) => {
+    try {
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        likes: increment(1)
+      });
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
+  };
+
+  // Delete a post
+  const handleDelete = async (postId) => {
+    try {
+      await deleteDoc(doc(db, 'posts', postId));
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Error deleting post');
+    }
+  };
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', padding: '40px' }}>Loading posts...</div>;
+  }
+
+  return (
+    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+      {/* Create Post Box */}
+      {user && (
+        <div style={{
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          marginBottom: '20px',
+          border: '1px solid #e5e7eb'
+        }}>
+          <p style={{ color: '#374151', marginBottom: '12px', fontWeight: 'bold' }}>
+            What's on your mind?
+          </p>
+          <textarea
+            style={{
+              width: '100%',
+              padding: '12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              resize: 'none',
+              fontFamily: 'inherit',
+              fontSize: '14px',
+              boxSizing: 'border-box'
+            }}
+            placeholder="Share something..."
+            rows="4"
+            value={newPost}
+            onChange={(e) => setNewPost(e.target.value)}
+          />
+          <button
+            onClick={handlePostCreate}
+            style={{
+              marginTop: '12px',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              padding: '10px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Post
+          </button>
+        </div>
+      )}
+
+      {/* Display Posts */}
+      <div>
+        {posts.length === 0 ? (
+          <div style={{
+            backgroundColor: 'white',
+            padding: '24px',
+            borderRadius: '8px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            textAlign: 'center',
+            color: '#9ca3af'
+          }}>
+            <p>No posts yet. {!user && 'Sign up to create your first post!'}</p>
+          </div>
+        ) : (
+          posts.map((post) => (
+            <div
+              key={post.id}
+              style={{
+                backgroundColor: 'white',
+                padding: '16px',
+                marginBottom: '16px',
+                borderRadius: '8px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                border: '1px solid #e5e7eb'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <h3 style={{ margin: '0', fontWeight: 'bold' }}>{post.author}</h3>
+                <span style={{ color: '#9ca3af', fontSize: '14px' }}>
+                  {post.timestamp?.toDate?.()?.toLocaleString?.() || 'Recently'}
+                </span>
+              </div>
+              <p style={{ color: '#1f2937', marginBottom: '12px' }}>{post.content}</p>
+              <div style={{ display: 'flex', gap: '24px' }}>
+                <button 
+                  onClick={() => handleLike(post.id)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  👍 Like ({post.likes})
+                </button>
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  💬 Comment
+                </button>
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  🔥 Fire
+                </button>
+                {user && user.uid === post.authorId && (
+                  <button 
+                    onClick={() => handleDelete(post.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                  >
+                    🗑️ Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
