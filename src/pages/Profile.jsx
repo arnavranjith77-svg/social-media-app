@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, onSnapshot, setDoc } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { db } from '../firebase';
 import { getAuth } from 'firebase/auth';
 
 export default function Profile({ currentUser }) {
@@ -19,14 +19,12 @@ export default function Profile({ currentUser }) {
 
     const fetchUserProfile = async () => {
       try {
-        // Try to get from Firestore first
         const userRef = doc(db, 'users', userId);
         const userSnap = await getDoc(userRef);
         
         if (userSnap.exists()) {
           setUserProfile(userSnap.data());
         } else {
-          // If not in Firestore, create from Firebase Auth
           const firebaseAuth = getAuth();
           const user = firebaseAuth.currentUser;
           
@@ -42,7 +40,6 @@ export default function Profile({ currentUser }) {
               following: 0
             };
             
-            // Save to Firestore for future use
             await setDoc(userRef, profile);
             setUserProfile(profile);
           }
@@ -77,7 +74,7 @@ export default function Profile({ currentUser }) {
         border: '1px solid #e5e7eb'
       }}>
         <div style={{
-          backgroundColor: '#550049',
+          backgroundColor: '#3b82f6',
           height: '120px',
           borderRadius: '8px 8px 0 0',
           marginBottom: '-40px',
@@ -120,19 +117,19 @@ export default function Profile({ currentUser }) {
             borderTop: '1px solid #e5e7eb'
           }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#550049' }}>
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#3b82f6' }}>
                 {userPosts.length}
               </div>
               <div style={{ fontSize: '12px', color: '#9ca3af' }}>Posts</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#550049' }}>
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#3b82f6' }}>
                 {userProfile.followers || 0}
               </div>
               <div style={{ fontSize: '12px', color: '#9ca3af' }}>Followers</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#550049' }}>
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#3b82f6' }}>
                 {userProfile.following || 0}
               </div>
               <div style={{ fontSize: '12px', color: '#9ca3af' }}>Following</div>
@@ -145,7 +142,7 @@ export default function Profile({ currentUser }) {
               style={{
                 marginTop: '16px',
                 width: '100%',
-                backgroundColor: '#550049',
+                backgroundColor: '#3b82f6',
                 color: 'white',
                 padding: '8px 16px',
                 border: 'none',
