@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import TrendingHashtags from './TrendingHashtags';
 import Comments from './Comments';
@@ -9,6 +9,7 @@ export default function Feed({ user }) {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
   const [loading, setLoading] = useState(true);
+  const [expandedComments, setExpandedComments] = useState({});
 
   useEffect(() => {
     const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
@@ -28,7 +29,9 @@ export default function Feed({ user }) {
           authorId: user.uid,
           content: newPost,
           timestamp: new Date(),
-          likes: 0
+          likes: 0,
+          dislikes: 0,
+          neverpostagains: 0
         });
         setNewPost('');
       } catch (error) {
@@ -41,42 +44,45 @@ export default function Feed({ user }) {
   const handleLike = async (postId) => {
     try {
       const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
-        likes: increment(1)
-      });
+      await updateDoc(postRef, { likes: increment(1) });
     } catch (error) {
       console.error('Error liking post:', error);
     }
   };
 
- const handleDislike = async (postId) => {
+  const handleDislike = async (postId) => {
     try {
       const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
-        dislikes: increment(1)
-      });
-    } catch (error) {
-      console.error('Error disliking post:', error);
-    }
-  };
-  const handleNeverpostagain = async (postId) => {
-    try {
-      const postRef = doc(db, 'posts', postId);
-      await updateDoc(postRef, {
-        neverpostagains: increment(1)
-      });
+      await updateDoc(postRef, { dislikes: increment(1) });
     } catch (error) {
       console.error('Error disliking post:', error);
     }
   };
 
-  const handleDelete = async (postId) => {
+  const handleNeverpostagain = async (postId) => {
     try {
-      await deleteDoc(doc(db, 'posts', postId));
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, { neverpostagains: increment(1) });
     } catch (error) {
-      console.error('Error deleting post:', error);
-      alert('Error deleting post');
+      console.error('Error with never post again:', error);
     }
+  };
+
+  const handleDelete = async (postId) => {
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      try {
+        await deleteDoc(doc(db, 'posts', postId));
+      } catch (error) {
+        console.error('Error deleting post:', error);
+      }
+    }
+  };
+
+  const toggleComments = (postId) => {
+    setExpandedComments(prev => ({
+      ...prev,
+      [postId]: !prev[postId]
+    }));
   };
 
   if (loading) {
@@ -88,43 +94,23 @@ export default function Feed({ user }) {
       <div style={{ flex: 1 }}>
         {user && (
           <div style={{
-            backgroundColor: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            marginBottom: '20px',
-            border: '1px solid #e5e7eb'
+            backgroundColor: 'white', padding: '20px', borderRadius: '8px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '20px', border: '1px solid #e5e7eb'
           }}>
-            <p style={{ color: '#374151', marginBottom: '12px', fontWeight: 'bold' }}>
-              What's on your mind?
-            </p>
+            <p style={{ color: '#374151', marginBottom: '12px', fontWeight: 'bold' }}>What's on your mind?</p>
             <textarea
               style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #d1d5db',
-                borderRadius: '8px',
-                resize: 'none',
-                fontFamily: 'inherit',
-                fontSize: '14px',
-                boxSizing: 'border-box'
+                width: '100%', padding: '12px', border: '1px solid #d1d5db',
+                borderRadius: '8px', resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box'
               }}
-              placeholder="Share something..."
-              rows="4"
-              value={newPost}
+              placeholder="Share something..." rows="4" value={newPost}
               onChange={(e) => setNewPost(e.target.value)}
             />
             <button
               onClick={handlePostCreate}
               style={{
-                marginTop: '12px',
-                backgroundColor: '#3b82f6',
-                color: 'white',
-                padding: '10px 24px',
-                borderRadius: '8px',
-                border: 'none',
-                cursor: 'pointer',
-                fontWeight: 'bold'
+                marginTop: '12px', backgroundColor: '#550049', color: 'white',
+                padding: '10px 24px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 'bold'
               }}
             >
               Post
@@ -134,111 +120,64 @@ export default function Feed({ user }) {
 
         <div>
           {posts.length === 0 ? (
-            <div style={{
-              backgroundColor: 'white',
-              padding: '24px',
-              borderRadius: '8px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              textAlign: 'center',
-              color: '#9ca3af'
-            }}>
+            <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px', textAlign: 'center', color: '#9ca3af' }}>
               <p>No posts yet. {!user && 'Sign up to create your first post!'}</p>
             </div>
           ) : (
             posts.map((post) => (
-              <div
-                key={post.id}
-                style={{
-                  backgroundColor: 'white',
-                  padding: '16px',
-                  marginBottom: '16px',
-                  borderRadius: '8px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                  border: '1px solid #e5e7eb'
-                }}
-              >
+              <div key={post.id} style={{
+                backgroundColor: 'white', padding: '16px', marginBottom: '16px',
+                borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb'
+              }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <Link
-                    to={`/profile/${post.authorId}`}
-                    style={{
-                      textDecoration: 'none',
-                      color: 'inherit'
-                    }}
-                  >
+                  <Link to={`/profile/${post.authorId}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <img
-                        src={`https://ui-avatars.com/api/?name=${post.author}`}
-                        alt={post.author}
-                        style={{ width: '32px', height: '32px', borderRadius: '50%' }}
-                      />
+                      <img src={`https://ui-avatars.com/api/?name=${post.author}`} alt={post.author} style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
                       <h3 style={{ margin: '0', fontWeight: 'bold' }}>{post.author}</h3>
                     </div>
                   </Link>
                   <span style={{ color: '#9ca3af', fontSize: '14px' }}>
-                    {post.timestamp?.toDate?.()?.toLocaleString?.() || 'Recently'}
+                    {post.timestamp?.toDate?.()?.toLocaleString() || 'Recently'}
                   </span>
                 </div>
+
                 <p style={{ color: '#1f2937', marginBottom: '12px' }}>
                   {post.content.split(' ').map((word, index) => (
                     <span key={index}>
-                      {word.startsWith('#') ? (
-                        <span style={{ color: '#3b82f6', fontWeight: 'bold' }}>
-                          {word}
-                        </span>
-                      ) : (
-                        word
-                      )}
-                      {' '}
+                      {word.startsWith('#') ? <span style={{ color: '#550049', fontWeight: 'bold' }}>{word}</span> : word}{' '}
                     </span>
                   ))}
                 </p>
-                <div style={{ display: 'flex', gap: '24px' }}>
-                  <button 
-                    onClick={() => handleLike(post.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
-                    👍 Like ({post.likes})
-                  </button>
-                  <button 
-                    onClick={() => handleDislike(post.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
-                  >
-                    👎 Dislike ({post.dislikes})
-                  </button>
-                  <button 
-                    onClick={() => handleNeverpostagain(post.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
-                  ></button>
-                  <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                    🤬 Never Post Again ({post.neverpostagains})
+
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                  <button onClick={() => handleLike(post.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                    👍 Like ({post.likes || 0})
                   </button>
                   
+                  <button onClick={() => handleDislike(post.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#550049' }}>
+                    👎 Dislike ({post.dislikes || 0})
+                  </button>
                   
-                  <button
-                    onClick={() => {
-                      const commentsSection = document.getElementById(`comments-${post.id}`);
-                      if (commentsSection) {
-                        commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
-                      }
-                    }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
+                  <button onClick={() => handleNeverpostagain(post.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                    🤬 Never Post Again ({post.neverpostagains || 0})
+                  </button>
+
+                  <button onClick={() => toggleComments(post.id)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                     💬 Comment
                   </button>
-                
+
                   {user && user.uid === post.authorId && (
-                    <button 
-                      onClick={() => handleDelete(post.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
-                    >
+                    <button onClick={() => handleDelete(post.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#550049' }}>
                       🗑️ Delete
                     </button>
                   )}
                 </div>
 
-                <div id={`comments-${post.id}`} style={{ display: 'none' }}>
-                  <Comments postId={post.id} user={user} />
-                </div>
+                {expandedComments[post.id] && (
+                  <div style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                    <Comments postId={post.id} user={user} />
+                  </div>
+                )}
               </div>
             ))
           )}
