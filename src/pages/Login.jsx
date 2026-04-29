@@ -28,7 +28,7 @@ export default function Login() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
       <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '8px', boxShadow: '0 10px 15px rgba(0,0,0,0.1)', maxWidth: '400px', width: '100%' }}>
-        <h2 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '24px', textAlign: 'center', color: '#2563eb' }}>
+        <h2 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '24px', textAlign: 'center', color: '#550049' }}>
           Login
         </h2>
 
@@ -49,13 +49,13 @@ export default function Login() {
             <input type="password" style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', boxSizing: 'border-box' }} placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
 
-          <button type="submit" disabled={loading} style={{ width: '100%', backgroundColor: '#3b82f6', color: 'white', fontWeight: '600', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
+          <button type="submit" disabled={loading} style={{ width: '100%', backgroundColor: '#550049', color: 'white', fontWeight: '600', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
         <p style={{ marginTop: '16px', textAlign: 'center', color: '#6b7280' }}>
-          Don't have an account? <Link to="/signup" style={{ color: '#3b82f6', fontWeight: '600' }}>Sign up</Link>
+          Don't have an account? <Link to="/signup" style={{ color: '#550049', fontWeight: '600' }}>Sign up</Link>
         </p>
       </div>
     </div>

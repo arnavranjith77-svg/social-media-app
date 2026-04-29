@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../firebase';
+import { setDoc, doc } from 'firebase/firestore';
+import { db } from '../firebase';
 import { useNavigate, Link } from 'react-router-dom';
 
 export default function Signup() {
@@ -29,8 +31,27 @@ export default function Signup() {
     setLoading(true);
 
     try {
+      const avatarURL = `https://ui-avatars.com/api/?name=${displayName}&background=random&bold=true`;
+      
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName: displayName });
+      
+      await updateProfile(userCredential.user, { 
+        displayName: displayName,
+        photoURL: avatarURL
+      });
+
+      // Save user profile to Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        uid: userCredential.user.uid,
+        displayName: displayName,
+        email: email,
+        photoURL: avatarURL,
+        bio: '',
+        createdAt: new Date(),
+        followers: 0,
+        following: 0
+      });
+
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -42,7 +63,7 @@ export default function Signup() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6' }}>
       <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '8px', boxShadow: '0 10px 15px rgba(0,0,0,0.1)', maxWidth: '400px', width: '100%' }}>
-        <h2 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '24px', textAlign: 'center', color: '#2563eb' }}>
+        <h2 style={{ fontSize: '30px', fontWeight: 'bold', marginBottom: '24px', textAlign: 'center', color: '#550049' }}>
           Sign Up
         </h2>
 
@@ -73,13 +94,13 @@ export default function Signup() {
             <input type="password" style={{ width: '100%', padding: '12px', border: '1px solid #d1d5db', borderRadius: '8px', boxSizing: 'border-box' }} placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
           </div>
 
-          <button type="submit" disabled={loading} style={{ width: '100%', backgroundColor: '#22c55e', color: 'white', fontWeight: '600', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
+          <button type="submit" disabled={loading} style={{ width: '100%', backgroundColor: '#550049', color: 'white', fontWeight: '600', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', opacity: loading ? 0.6 : 1 }}>
             {loading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
 
         <p style={{ marginTop: '16px', textAlign: 'center', color: '#6b7280' }}>
-          Have account? <Link to="/login" style={{ color: '#3b82f6', fontWeight: '600' }}>Login</Link>
+          Have account? <Link to="/login" style={{ color: '#550049', fontWeight: '600' }}>Login</Link>
         </p>
       </div>
     </div>

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
+import TrendingHashtags from './TrendingHashtags';
+import { Link } from 'react-router-dom';
 
 export default function Feed({ user }) {
   const [posts, setPosts] = useState([]);
   const [newPost, setNewPost] = useState('');
   const [loading, setLoading] = useState(true);
 
-  // Fetch posts from Firestore
   useEffect(() => {
     const q = query(collection(db, 'posts'), orderBy('timestamp', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -18,7 +19,6 @@ export default function Feed({ user }) {
     return unsubscribe;
   }, []);
 
-  // Add new post to Firestore
   const handlePostCreate = async () => {
     if (newPost.trim() && user) {
       try {
@@ -36,8 +36,8 @@ export default function Feed({ user }) {
       }
     }
   };
+  
 
-  // Like a post
   const handleLike = async (postId) => {
     try {
       const postRef = doc(db, 'posts', postId);
@@ -49,7 +49,28 @@ export default function Feed({ user }) {
     }
   };
 
-  // Delete a post
+  const handleDislike = async (postId) => {
+  try {
+    const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        dislikes: increment(1)
+      });
+    } catch (error) {
+    console.error('Error disliking post:', error);
+  }
+};
+
+ const handleNeverpostagain = async (postId) => {
+  try {
+    const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        neverpostagains: increment(1)
+      });
+    } catch (error) {
+    console.error('Error disliking post:', error);
+  }
+};
+
   const handleDelete = async (postId) => {
     try {
       await deleteDoc(doc(db, 'posts', postId));
@@ -64,112 +85,158 @@ export default function Feed({ user }) {
   }
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-      {/* Create Post Box */}
-      {user && (
-        <div style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          marginBottom: '20px',
-          border: '1px solid #e5e7eb'
-        }}>
-          <p style={{ color: '#374151', marginBottom: '12px', fontWeight: 'bold' }}>
-            What's on your mind?
-          </p>
-          <textarea
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              resize: 'none',
-              fontFamily: 'inherit',
-              fontSize: '14px',
-              boxSizing: 'border-box'
-            }}
-            placeholder="Share something..."
-            rows="4"
-            value={newPost}
-            onChange={(e) => setNewPost(e.target.value)}
-          />
-          <button
-            onClick={handlePostCreate}
-            style={{
-              marginTop: '12px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              padding: '10px 24px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 'bold'
-            }}
-          >
-            Post
-          </button>
-        </div>
-      )}
-
-      {/* Display Posts */}
-      <div>
-        {posts.length === 0 ? (
+    <div style={{ display: 'flex', gap: '20px', maxWidth: '1200px', margin: '0 auto', padding: '20px' }}>
+      <div style={{ flex: 1 }}>
+        {user && (
           <div style={{
             backgroundColor: 'white',
-            padding: '24px',
+            padding: '20px',
             borderRadius: '8px',
             boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            textAlign: 'center',
-            color: '#9ca3af'
+            marginBottom: '20px',
+            border: '1px solid #e5e7eb'
           }}>
-            <p>No posts yet. {!user && 'Sign up to create your first post!'}</p>
-          </div>
-        ) : (
-          posts.map((post) => (
-            <div
-              key={post.id}
+            <p style={{ color: '#374151', marginBottom: '12px', fontWeight: 'bold' }}>
+              What's on your mind?
+            </p>
+            <textarea
               style={{
-                backgroundColor: 'white',
-                padding: '16px',
-                marginBottom: '16px',
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #d1d5db',
                 borderRadius: '8px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                border: '1px solid #e5e7eb'
+                resize: 'none',
+                fontFamily: 'inherit',
+                fontSize: '14px',
+                boxSizing: 'border-box'
+              }}
+              placeholder="Share something..."
+              rows="4"
+              value={newPost}
+              onChange={(e) => setNewPost(e.target.value)}
+            />
+            <button
+              onClick={handlePostCreate}
+              style={{
+                marginTop: '12px',
+                backgroundColor: '#550049',
+                color: 'white',
+                padding: '10px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 'bold'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <h3 style={{ margin: '0', fontWeight: 'bold' }}>{post.author}</h3>
-                <span style={{ color: '#9ca3af', fontSize: '14px' }}>
-                  {post.timestamp?.toDate?.()?.toLocaleString?.() || 'Recently'}
-                </span>
-              </div>
-              <p style={{ color: '#1f2937', marginBottom: '12px' }}>{post.content}</p>
-              <div style={{ display: 'flex', gap: '24px' }}>
-                <button 
-                  onClick={() => handleLike(post.id)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                >
-                  👍 Like ({post.likes})
-                </button>
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                  💬 Comment
-                </button>
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                  🔥 Fire
-                </button>
-                {user && user.uid === post.authorId && (
-                  <button 
-                    onClick={() => handleDelete(post.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
-                  >
-                    🗑️ Delete
-                  </button>
-                )}
-              </div>
-            </div>
-          ))
+              Post
+            </button>
+          </div>
         )}
+
+        <div>
+          {posts.length === 0 ? (
+            <div style={{
+              backgroundColor: 'white',
+              padding: '24px',
+              borderRadius: '8px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              textAlign: 'center',
+              color: '#9ca3af'
+            }}>
+              <p>No posts yet. {!user && 'Sign up to create your first post!'}</p>
+            </div>
+          ) : (
+            posts.map((post) => (
+              <div
+                key={post.id}
+                style={{
+                  backgroundColor: 'white',
+                  padding: '16px',
+                  marginBottom: '16px',
+                  borderRadius: '8px',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  border: '1px solid #e5e7eb'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <Link
+                    to={`/profile/${post.authorId}`}
+                    style={{
+                      textDecoration: 'none',
+                      color: 'inherit'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <img
+                        src={`https://ui-avatars.com/api/?name=${post.author}`}
+                        alt={post.author}
+                        style={{ width: '32px', height: '32px', borderRadius: '50%' }}
+                      />
+                      <h3 style={{ margin: '0', fontWeight: 'bold' }}>{post.author}</h3>
+                    </div>
+                  </Link>
+                  <span style={{ color: '#9ca3af', fontSize: '14px' }}>
+                    {post.timestamp?.toDate?.()?.toLocaleString?.() || 'Recently'}
+                  </span>
+                </div>
+                <p style={{ color: '#1f2937', marginBottom: '12px' }}>
+                  {post.content.split(' ').map((word, index) => (
+                    <span key={index}>
+                      {word.startsWith('#') ? (
+                        <span style={{ color: '#550049', fontWeight: 'bold' }}>
+                          {word}
+                        </span>
+                      ) : (
+                        word
+                      )}
+                      {' '}
+                    </span>
+                  ))}
+                </p>
+                <div style={{ display: 'flex', gap: '24px' }}>
+                  
+                  <button 
+                    onClick={() => handleLike(post.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    👍 Like ({post.likes})
+                  </button>
+                  
+                  <button
+                  onClick={() => handleDislike(post.id)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                    👎 Dislike ({post.dislikes})
+                  </button>
+
+                  <button 
+                    onClick={() => handleNeverpostagain(post.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    🤬 Never Post Again ({post.neverpostagains})
+                  </button>
+                  
+                  <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                    💬 Comment
+                  </button>
+
+                  {user && user.uid === post.authorId && (
+                    
+                    <button 
+                      onClick={() => handleDelete(post.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                    >
+                      🗑️ Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div style={{ width: '280px' }}>
+        <TrendingHashtags />
       </div>
     </div>
   );

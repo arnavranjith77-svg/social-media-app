@@ -3,37 +3,71 @@ import { Link } from 'react-router-dom';
 export default function Navbar({ user, onLogout }) {
   return (
     <nav style={{
-      backgroundColor: '#dd800f',
+      backgroundColor: '#550049',
       color: 'white',
       padding: '16px',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
     }}>
       <Link to="/" style={{ textDecoration: 'none', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>
-        😀 ZUMBA
+        🍇 Grapevine Beta Test 3.5 (made with the help of AI)
       </Link>
       
-      <div style={{ display: 'flex', gap: '20px' }}>
-        {user ? (
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+        
+        <Link 
+  to="/watchlist"
+  style={{ 
+    color: 'white', 
+    textDecoration: 'none',
+    fontWeight: 'bold',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '4px'
+  }}
+>
+  📊 Stock Market
+</Link>
+        
+        {
+        
+        user ? (
           <>
             <Link 
               to={`/profile/${user.uid}`}
-              style={{ color: 'white', textDecoration: 'none' }}
+              style={{ 
+                color: 'white', 
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
             >
-              👤 My Profile
+              <img
+                src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`}
+                alt="Profile"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  border: '2px solid white'
+                }}
+              />
+              <span>{user.displayName}</span>
             </Link>
             <button 
               onClick={onLogout}
               style={{
-                backgroundColor: '#008cff',
+                backgroundColor: '#ef4444',
                 color: 'white',
                 border: 'none',
                 padding: '8px 16px',
                 borderRadius: '4px',
                 cursor: 'pointer',
-                fontSize: '14px'
+                fontSize: '14px',
+                fontWeight: 'bold'
               }}
             >
               Logout
@@ -43,23 +77,19 @@ export default function Navbar({ user, onLogout }) {
           <>
             <Link 
               to="/login"
-              style={{ backgroundColor: '#008cff',
-                color: 'white',
-                padding: '8px 16px',
-                borderRadius: '4px',
-                textDecoration: 'none' 
-              }}
+              style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold' }}
             >
               Login
             </Link>
             <Link 
               to="/signup"
               style={{
-                backgroundColor: '#008cff',
+                backgroundColor: '#ef4444',
                 color: 'white',
                 padding: '8px 16px',
                 borderRadius: '4px',
-                textDecoration: 'none'
+                textDecoration: 'none',
+                fontWeight: 'bold'
               }}
             >
               Get Started

@@ -6,6 +6,10 @@ import Navbar from './components/Navbar';
 import Feed from './components/Feed';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import HashtagPage from './pages/HashtagPage';
+import Profile from './pages/Profile';
+import EditProfile from './pages/EditProfile';
+import Watchlist from './pages/Watchlist';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -35,6 +39,10 @@ function App() {
         <Route path="/" element={<Feed user={user} />} />
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
         <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" />} />
+        <Route path="/hashtag/:hashtag" element={<HashtagPage user={user} />} />
+        <Route path="/profile/:userId" element={<Profile currentUser={user} />} />
+        <Route path="/edit-profile" element={user ? <EditProfile user={user} /> : <Navigate to="/login" />} />
+        <Route path="/watchlist" element={user ? <Watchlist user={user} /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );
