@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import TrendingHashtags from './TrendingHashtags';
+import Comments from './Comments';
 import { Link } from 'react-router-dom';
 
 export default function Feed({ user }) {
@@ -36,7 +37,6 @@ export default function Feed({ user }) {
       }
     }
   };
-  
 
   const handleLike = async (postId) => {
     try {
@@ -49,27 +49,26 @@ export default function Feed({ user }) {
     }
   };
 
-  const handleDislike = async (postId) => {
-  try {
-    const postRef = doc(db, 'posts', postId);
+ const handleDislike = async (postId) => {
+    try {
+      const postRef = doc(db, 'posts', postId);
       await updateDoc(postRef, {
         dislikes: increment(1)
       });
     } catch (error) {
-    console.error('Error disliking post:', error);
-  }
-};
-
- const handleNeverpostagain = async (postId) => {
-  try {
-    const postRef = doc(db, 'posts', postId);
+      console.error('Error disliking post:', error);
+    }
+  };
+  const handleNeverpostagain = async (postId) => {
+    try {
+      const postRef = doc(db, 'posts', postId);
       await updateDoc(postRef, {
         neverpostagains: increment(1)
       });
     } catch (error) {
-    console.error('Error disliking post:', error);
-  }
-};
+      console.error('Error disliking post:', error);
+    }
+  };
 
   const handleDelete = async (postId) => {
     try {
@@ -119,7 +118,7 @@ export default function Feed({ user }) {
               onClick={handlePostCreate}
               style={{
                 marginTop: '12px',
-                backgroundColor: '#550049',
+                backgroundColor: '#3b82f6',
                 color: 'white',
                 padding: '10px 24px',
                 borderRadius: '8px',
@@ -183,7 +182,7 @@ export default function Feed({ user }) {
                   {post.content.split(' ').map((word, index) => (
                     <span key={index}>
                       {word.startsWith('#') ? (
-                        <span style={{ color: '#550049', fontWeight: 'bold' }}>
+                        <span style={{ color: '#3b82f6', fontWeight: 'bold' }}>
                           {word}
                         </span>
                       ) : (
@@ -194,33 +193,40 @@ export default function Feed({ user }) {
                   ))}
                 </p>
                 <div style={{ display: 'flex', gap: '24px' }}>
-                  
                   <button 
                     onClick={() => handleLike(post.id)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                   >
                     👍 Like ({post.likes})
                   </button>
-                  
-                  <button
-                  onClick={() => handleDislike(post.id)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <button 
+                    onClick={() => handleDislike(post.id)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                  >
                     👎 Dislike ({post.dislikes})
                   </button>
-
                   <button 
                     onClick={() => handleNeverpostagain(post.id)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-                  >
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                  ></button>
+                  <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                     🤬 Never Post Again ({post.neverpostagains})
                   </button>
                   
-                  <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  
+                  <button
+                    onClick={() => {
+                      const commentsSection = document.getElementById(`comments-${post.id}`);
+                      if (commentsSection) {
+                        commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
+                      }
+                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
                     💬 Comment
                   </button>
-
+                
                   {user && user.uid === post.authorId && (
-                    
                     <button 
                       onClick={() => handleDelete(post.id)}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
@@ -228,6 +234,10 @@ export default function Feed({ user }) {
                       🗑️ Delete
                     </button>
                   )}
+                </div>
+
+                <div id={`comments-${post.id}`} style={{ display: 'none' }}>
+                  <Comments postId={post.id} user={user} />
                 </div>
               </div>
             ))

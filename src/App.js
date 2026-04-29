@@ -10,6 +10,7 @@ import HashtagPage from './pages/HashtagPage';
 import Profile from './pages/Profile';
 import EditProfile from './pages/EditProfile';
 import Watchlist from './pages/Watchlist';
+import Users from './pages/Users';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -43,6 +44,7 @@ function App() {
         <Route path="/profile/:userId" element={<Profile currentUser={user} />} />
         <Route path="/edit-profile" element={user ? <EditProfile user={user} /> : <Navigate to="/login" />} />
         <Route path="/watchlist" element={user ? <Watchlist user={user} /> : <Navigate to="/login" />} />
+        <Route path="/users" element={<Users currentUser={user} />} />
       </Routes>
     </Router>
   );

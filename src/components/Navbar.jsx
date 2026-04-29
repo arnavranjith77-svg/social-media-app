@@ -31,9 +31,20 @@ export default function Navbar({ user, onLogout }) {
   📊 Stock Market
 </Link>
         
+       <Link 
+  to="/users"
+  style={{ 
+    color: 'white', 
+    textDecoration: 'none',
+    fontWeight: 'bold'
+  }}
+>
+  👥 Users
+</Link>
         {
         
-        user ? (
+        
+user ? (
           <>
             <Link 
               to={`/profile/${user.uid}`}
