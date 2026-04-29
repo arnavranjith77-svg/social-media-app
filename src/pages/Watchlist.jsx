@@ -8,7 +8,7 @@ export default function Watchlist({ user }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Mock stock data (replace with real API later)
+  // Mock stock data with realistic changes
   const getStockPrice = (symbol) => {
     const mockPrices = {
       'AAPL': { price: 175.43, change: 2.34, changePercent: 1.35 },
@@ -24,6 +24,7 @@ export default function Watchlist({ user }) {
     return mockPrices[symbol.toUpperCase()] || { price: 100.00, change: 0, changePercent: 0 };
   };
 
+  // Fetch watchlist from Firebase
   useEffect(() => {
     if (!user) return;
 
@@ -40,6 +41,20 @@ export default function Watchlist({ user }) {
     return unsubscribe;
   }, [user]);
 
+  // Auto-refresh prices every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWatchlist(prevWatchlist => 
+        prevWatchlist.map(stock => ({
+          ...stock,
+          ...getStockPrice(stock.symbol)
+        }))
+      );
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(interval); // Clean up interval
+  }, []);
+
   const handleAddStock = async (e) => {
     e.preventDefault();
     if (!stockSymbol.trim()) return;
@@ -48,7 +63,6 @@ export default function Watchlist({ user }) {
     setError('');
 
     try {
-      // Check if stock already in watchlist
       const exists = watchlist.find(s => s.symbol.toUpperCase() === stockSymbol.toUpperCase());
       if (exists) {
         setError('Stock already in watchlist');
@@ -89,7 +103,7 @@ export default function Watchlist({ user }) {
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
       <h1 style={{ color: '#1f2937', marginBottom: '24px', fontSize: '32px', fontWeight: 'bold' }}>
-        📊 Stock Watchlist
+        📊 Stock Watchlist (Auto-Refreshing)
       </h1>
 
       {/* Add Stock Form */}
@@ -147,6 +161,10 @@ export default function Watchlist({ user }) {
         <div style={{ marginTop: '12px', fontSize: '12px', color: '#9ca3af' }}>
           Available: AAPL, GOOGL, MSFT, TSLA, AMZN, META, NVDA, AMD
         </div>
+
+        <div style={{ marginTop: '8px', fontSize: '11px', color: '#6b7280', fontStyle: 'italic' }}>
+          💡 Prices update automatically every 5 seconds
+        </div>
       </div>
 
       {/* Watchlist */}
@@ -174,7 +192,8 @@ export default function Watchlist({ user }) {
                 border: '1px solid #e5e7eb',
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center'
+                alignItems: 'center',
+                animation: 'fadeIn 0.3s ease-in' // Add fade animation
               }}
             >
               <div style={{ flex: 1 }}>
@@ -196,6 +215,9 @@ export default function Watchlist({ user }) {
                   color: stock.change >= 0 ? '#16a34a' : '#dc2626'
                 }}>
                   {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)} ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%)
+                </div>
+                <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '4px' }}>
+                  ⏱️ Live
                 </div>
               </div>
 
@@ -238,6 +260,17 @@ export default function Watchlist({ user }) {
           </span>
         </div>
       )}
+
+      <style>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0.7;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 }

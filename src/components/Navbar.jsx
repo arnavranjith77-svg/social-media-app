@@ -12,7 +12,7 @@ export default function Navbar({ user, onLogout }) {
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
     }}>
       <Link to="/" style={{ textDecoration: 'none', color: 'white', fontSize: '24px', fontWeight: 'bold' }}>
-        🍇 Grapevine Beta Test 3.5 (made with the help of AI)
+        🍇 Grapevine 1.0 (made with the help of AI)
       </Link>
       
       <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
